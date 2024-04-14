@@ -62,11 +62,12 @@ if uploaded_file is not None:
         )
 
         splits = text_splitter.split_documents(loaded_doc)
-        # Create a Chroma vector database from the document splits
-        vectorstore = Chroma.from_documents(
-            documents=splits,
-            embedding=embeddings_model,
-        )
+
+    # Create a Chroma vector database from the document splits
+    vectorstore = Chroma.from_documents(
+        documents=splits,
+        embedding=embeddings_model,
+    )
 
 # LLM flag for augmented generation (the flag only applied to llm, not embedding model)
 USE_Anthropic = True
