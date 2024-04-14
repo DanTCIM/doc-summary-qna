@@ -213,7 +213,7 @@ if uploaded_file is not None:
             msgs.add_ai_message(summary_data)
 
     st.sidebar.button(
-        label="Summarize the document",
+        label="Summarize the doc (takes a minute)",
         use_container_width=True,
         on_click=summarizer,
         help="Summarizing the full document. Can take a while to complete.",
