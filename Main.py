@@ -54,6 +54,11 @@ if "prev_file" not in st.session_state:
 if "vectorstore" not in st.session_state:
     st.session_state.vectorstore = None
 
+# Initialize a session state variable to store the text
+if "loaded_doc" not in st.session_state:
+    st.session_state.loaded_doc = None
+
+
 if uploaded_file is not None:
     if uploaded_file != st.session_state.prev_file:
         with st.spinner("Extracting text from PDF and converting to embeddings..."):
@@ -62,7 +67,7 @@ if uploaded_file is not None:
                 f.write(uploaded_file.getvalue())
 
             loader = PDFMinerLoader("tempXXX.pdf", concatenate_pages=True)
-            loaded_doc = loader.load()
+            st.session_state.loaded_doc = loader.load()
 
             # text_splitter = SemanticChunker(embeddings_model)
             text_splitter = RecursiveCharacterTextSplitter(
@@ -71,7 +76,7 @@ if uploaded_file is not None:
                 length_function=len,
             )
 
-            splits = text_splitter.split_documents(loaded_doc)
+            splits = text_splitter.split_documents(st.session_state.loaded_doc)
 
             # Create a Chroma vector database from the document splits
             st.session_state.vectorstore = Chroma.from_documents(
@@ -202,7 +207,9 @@ if uploaded_file is not None:
 
     def summarizer():
         with st.spinner("Summarizing the document..."):
-            summary_data = stuff_chain.invoke(loaded_doc)["output_text"]
+            summary_data = stuff_chain.invoke(st.session_state.loaded_doc)[
+                "output_text"
+            ]
             msgs.add_ai_message(summary_data)
 
     st.sidebar.button(
