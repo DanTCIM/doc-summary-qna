@@ -50,6 +50,10 @@ uploaded_file = st.file_uploader(
 if "prev_file" not in st.session_state:
     st.session_state.prev_file = None
 
+# Initialize a session state variable to store the vectorstore
+if "vectorstore" not in st.session_state:
+    st.session_state.vectorstore = None
+
 if uploaded_file is not None:
     if uploaded_file != st.session_state.prev_file:
         with st.spinner("Extracting text from PDF and converting to embeddings..."):
@@ -70,7 +74,7 @@ if uploaded_file is not None:
             splits = text_splitter.split_documents(loaded_doc)
 
             # Create a Chroma vector database from the document splits
-            vectorstore = Chroma.from_documents(
+            st.session_state.vectorstore = Chroma.from_documents(
                 documents=splits,
                 embedding=embeddings_model,
             )
@@ -153,7 +157,7 @@ if uploaded_file is not None:
     search_kwargs = {"k": num_source}
 
     if flag_mmr:
-        retriever = vectorstore.as_retriever(
+        retriever = st.session_state.vectorstore.as_retriever(
             search_type="mmr",
             search_kwargs={**search_kwargs, "lambda_mult": _lambda_mult},
         )
@@ -162,7 +166,7 @@ if uploaded_file is not None:
         # Increase the number of documents to get, and increase diversity
         # (lambda mult 0.5 being default, 0 being the most diverse, 1 being the least)
     else:
-        retriever = vectorstore.as_retriever(
+        retriever = st.session_state.vectorstore.as_retriever(
             search_kwargs=search_kwargs
         )  # use similarity search
 
