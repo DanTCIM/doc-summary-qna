@@ -45,29 +45,36 @@ uploaded_file = st.file_uploader(
     accept_multiple_files=False,
     help="Pictures or charts in the document are not recognized",
 )
+
+# Initialize a session state variable to store the previous file
+if "prev_file" not in st.session_state:
+    st.session_state.prev_file = None
+
 if uploaded_file is not None:
-    with st.spinner("Extracting text from PDF and converting to embeddings..."):
-        # Save the uploaded file to a temporary location
-        with open("tempXXX.pdf", "wb") as f:
-            f.write(uploaded_file.getvalue())
+    if uploaded_file != st.session_state.prev_file:
+        with st.spinner("Extracting text from PDF and converting to embeddings..."):
+            # Save the uploaded file to a temporary location
+            with open("tempXXX.pdf", "wb") as f:
+                f.write(uploaded_file.getvalue())
 
-        loader = PDFMinerLoader("tempXXX.pdf", concatenate_pages=True)
-        loaded_doc = loader.load()
+            loader = PDFMinerLoader("tempXXX.pdf", concatenate_pages=True)
+            loaded_doc = loader.load()
 
-        # text_splitter = SemanticChunker(embeddings_model)
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=2000,
-            chunk_overlap=200,
-            length_function=len,
-        )
+            # text_splitter = SemanticChunker(embeddings_model)
+            text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=1000,
+                chunk_overlap=100,
+                length_function=len,
+            )
 
-        splits = text_splitter.split_documents(loaded_doc)
+            splits = text_splitter.split_documents(loaded_doc)
 
-    # Create a Chroma vector database from the document splits
-    vectorstore = Chroma.from_documents(
-        documents=splits,
-        embedding=embeddings_model,
-    )
+            # Create a Chroma vector database from the document splits
+            vectorstore = Chroma.from_documents(
+                documents=splits,
+                embedding=embeddings_model,
+            )
+        st.session_state.prev_file = uploaded_file
 
 # LLM flag for augmented generation (the flag only applied to llm, not embedding model)
 USE_Anthropic = True
