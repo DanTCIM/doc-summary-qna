@@ -37,7 +37,7 @@ os.environ["ANTHROPIC_API_KEY"] = st.secrets["ANTHROPIC_API_KEY"]
 # Start Streamlit session
 st.set_page_config(page_title="Doc Summary Q&A Tool", page_icon="📖")
 st.header("Actuarial Document Summarizer and Q&A Tool")
-
+st.write("Click the button in the sidebar to summarize.")
 # Setup uploader
 uploaded_file = st.file_uploader(
     label="Upload your own PDF file. Do NOT upload files that contain confidential or private information.",

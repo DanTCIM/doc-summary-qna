@@ -4,6 +4,25 @@ st.set_page_config(page_title="FAQ", page_icon="📖")
 
 st.title("Frequently Asked Questions")
 
+st.image("../images/RAG_process.png")
+st.write(
+    """
+- The overall RAG process is fast and efficient.
+- The retrieval of context is based on a vector search (e.g., similarity), which is fast and efficient.
+- The LLM API cost is reasonable, as retrieved contexts (not the full contexts) are used as input to the LLM.
+- The RAG instruction indicates how the LLM should respond (e.g., only using retrieved contexts to answer questions).
+"""
+)
+st.image("../images/summary_process.png")
+st.write(
+    """
+- The summary process is slow, as the full contexts are input into the LLM.
+- The process leverages a large context window of the LLM (e.g., 200k tokens for Claude 3). Any information beyond this window is discarded.
+- The LLM API cost is more expensive, as the full contexts are used as input to the LLM.
+- The summary instruction provides a format for summarizing the full document.
+"""
+)
+
 with st.expander("What is RAG?"):
     st.write(
         """
