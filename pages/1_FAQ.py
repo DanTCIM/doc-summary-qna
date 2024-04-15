@@ -5,7 +5,7 @@ st.set_page_config(page_title="FAQ", page_icon="📖")
 st.title("Frequently Asked Questions")
 
 try:
-    st.image("RAG_process.png")
+    st.image("./pages/RAG_process.png", channels="BGR")
 except Exception as e:
     st.error(f"Failed to load image: {e}")
 
@@ -19,7 +19,7 @@ st.write(
 )
 
 try:
-    st.image("summary_process.png")
+    st.image("./pages/summary_process.png", channels="BGR")
 except Exception as e:
     st.error(f"Failed to load image: {e}")
 
