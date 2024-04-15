@@ -4,7 +4,11 @@ st.set_page_config(page_title="FAQ", page_icon="📖")
 
 st.title("Frequently Asked Questions")
 
-st.image("RAG_process.png")
+try:
+    st.image("RAG_process.png")
+except Exception as e:
+    st.error(f"Failed to load image: {e}")
+
 st.write(
     """
 - The overall RAG process is fast and efficient.
@@ -13,7 +17,12 @@ st.write(
 - The RAG instruction indicates how the LLM should respond (e.g., only using retrieved contexts to answer questions).
 """
 )
-st.image("summary_process.png")
+
+try:
+    st.image("summary_process.png")
+except Exception as e:
+    st.error(f"Failed to load image: {e}")
+
 st.write(
     """
 - The summary process is slow, as the full contexts are input into the LLM.
