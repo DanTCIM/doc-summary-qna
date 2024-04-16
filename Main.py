@@ -20,15 +20,17 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from langchain.chains.llm import LLMChain
+from langchain.document_loaders import Docx2txtLoader
 from langchain_anthropic import ChatAnthropic
 from langchain_community.chat_models import ChatOpenAI
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 from langchain_community.vectorstores import Chroma
 from langchain_community.document_loaders import PDFMinerLoader
-from langchain_experimental.text_splitter import SemanticChunker
+from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-
 import pandas as pd
+
+# from langchain_experimental.text_splitter import SemanticChunker
 
 # API Key Setup
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
@@ -40,8 +42,8 @@ st.header("Actuarial Document Summarizer and Q&A Tool")
 st.write("Click the button in the sidebar to summarize.")
 # Setup uploader
 uploaded_file = st.file_uploader(
-    label="Upload your own PDF file. Do NOT upload files that contain confidential or private information.",
-    type=["pdf"],
+    label="Upload your own PDF or DOCX or TXT file. Do NOT upload files that contain confidential or private information.",
+    type=["pdf", "docx", "txt"],
     accept_multiple_files=False,
     help="Pictures or charts in the document are not recognized",
 )
@@ -61,12 +63,30 @@ if "loaded_doc" not in st.session_state:
 
 if uploaded_file is not None:
     if uploaded_file != st.session_state.prev_file:
-        with st.spinner("Extracting text from PDF and converting to embeddings..."):
-            # Save the uploaded file to a temporary location
-            with open("tempXXX.pdf", "wb") as f:
-                f.write(uploaded_file.getvalue())
+        with st.spinner("Extracting text and converting to embeddings..."):
+            if uploaded_file.name.endswith(".pdf"):
+                # Save the uploaded file to a temporary location
+                with open("tempXXX.pdf", "wb") as f:
+                    f.write(uploaded_file.getvalue())
+                loader = PDFMinerLoader("tempXXX.pdf", concatenate_pages=True)
 
-            loader = PDFMinerLoader("tempXXX.pdf", concatenate_pages=True)
+            elif uploaded_file.name.endswith(".docx"):
+                # Save the uploaded DOCX file to a temporary location
+                with open("tempXXX.docx", "wb") as f:
+                    f.write(uploaded_file.getvalue())
+                loader = Docx2txtLoader("tempXXX.docx")
+
+            elif uploaded_file.name.endswith(".txt"):
+                # Save the uploaded DOCX file to a temporary location
+                with open("tempXXX.txt", "wb") as f:
+                    f.write(uploaded_file.getvalue())
+                loader = TextLoader("tempXXX.txt")
+
+            else:
+                st.error(
+                    "Unsupported file format. Please upload a file in a supported format."
+                )
+
             st.session_state.loaded_doc = loader.load()
 
             # text_splitter = SemanticChunker(embeddings_model)

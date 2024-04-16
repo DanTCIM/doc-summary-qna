@@ -1,6 +1,6 @@
 # Actuarial Document Summarizer and Q&A Tool
 ## 1. Description
-This project aims to create a process to help actuaries review actuarial documents. Once a PDF file is uploaded, a user can create a summary or ask questions about the document. The process utilizes the power of a large language model (LLM). The tool is powered by Anthropic's Claude 3 Sonnet.
+This project aims to create a process to help actuaries review actuarial documents. Once a file (PDF, DOCX, TXT) is uploaded, a user can create a summary or ask questions about the document. The process utilizes the power of a large language model (LLM). The tool is powered by Anthropic's Claude 3 Sonnet.
 
 It is crucial to know that an LLM's response may be inaccurate. Actuaries are strongly encouraged to review the source document after using the tool.
 
@@ -9,7 +9,7 @@ The Retrieval-Augmented Generation (RAG) process used LangChain, a framework for
 ## 2. Output
 ### 2.1 Demo App
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://doc-summary-qna.streamlit.app/)  
-Please visit the Streamlit web app (https://doc-summary-qna.streamlit.app/) to upload your own PDF document. Explore how the tool can help you familiarize yourself with the document and get questions answered about it.
+Please visit the Streamlit web app (https://doc-summary-qna.streamlit.app/) to upload your own document. Explore how the tool can help you familiarize yourself with the document and get questions answered about it.
 
 ## 3. Model
 ### 3.1 Conceptual Flow
