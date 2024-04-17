@@ -42,7 +42,7 @@ st.header("Actuarial Document Summarizer and Q&A Tool")
 st.write("Click the button in the sidebar to summarize.")
 # Setup uploader
 uploaded_file = st.file_uploader(
-    label="Upload your own PDF or DOCX or TXT file. Do NOT upload files that contain confidential or private information.",
+    label="Upload your own PDF, DOCX, or TXT file. Do NOT upload files that contain confidential or private information.",
     type=["pdf", "docx", "txt"],
     accept_multiple_files=False,
     help="Pictures or charts in the document are not recognized",
