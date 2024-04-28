@@ -1,9 +1,3 @@
-## sqlite3 related (for Streamlit)
-# import pysqlite3
-# import sys
-
-# sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
-
 import os
 import re
 import streamlit as st
@@ -27,8 +21,6 @@ from langchain_community.document_loaders import Docx2txtLoader
 from langchain_anthropic import ChatAnthropic
 from langchain_community.chat_models import ChatOpenAI
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
-
-# from langchain_community.vectorstores import Chroma
 from langchain_pinecone import PineconeVectorStore
 from pinecone import Pinecone
 from langchain_community.document_loaders import PDFMinerLoader
@@ -105,6 +97,9 @@ def main():
     )
 
     # Initialize session state variables
+    if "curr_file" not in st.session_state:
+        st.session_state.curr_file = None
+
     if "prev_file" not in st.session_state:
         st.session_state.prev_file = None
 
@@ -115,42 +110,38 @@ def main():
         st.session_state.loaded_doc = None
 
     if uploaded_file is not None:
-        if uploaded_file != st.session_state.prev_file:
-            with st.spinner("Extracting text and converting to embeddings..."):
-                loader = load_document(uploaded_file)
-                st.session_state.loaded_doc = loader.load()
+        st.session_state.curr_file = uploaded_file
 
-                splits = text_split_fn(st.session_state.loaded_doc)
+    if st.session_state.curr_file != st.session_state.prev_file:
+        with st.spinner("Extracting text and converting to embeddings..."):
+            loader = load_document(uploaded_file)
+            st.session_state.loaded_doc = loader.load()
 
-                namespace = re.sub(r"[^a-zA-Z0-9 \n\.]", "_", uploaded_file.name)
+            splits = text_split_fn(st.session_state.loaded_doc)
 
-                # Create a Chroma vector database from the document splits
-                # st.session_state.vectorstore = Chroma.from_documents(
-                #     documents=splits,
-                #     embedding=embeddings_model,
-                # )
+            namespace = re.sub(r"[^a-zA-Z0-9 \n\.]", "_", uploaded_file.name)
 
-                st.session_state.vectorstore = PineconeVectorStore(
-                    index=pc.Index("streamlit"),
-                    embedding=embeddings_model,
-                    namespace=namespace,
-                )
-                index = pc.Index("streamlit")
-                try:
-                    index.delete(delete_all=True, namespace=namespace)
-                except Exception as e:
-                    pass
+            st.session_state.vectorstore = PineconeVectorStore(
+                index=pc.Index("streamlit"),
+                embedding=embeddings_model,
+                namespace=namespace,
+            )
+            index = pc.Index("streamlit")
+            try:
+                index.delete(delete_all=True, namespace=namespace)
+            except Exception as e:
+                pass
 
-                st.session_state.vectorstore.add_documents(
-                    documents=splits,
-                    namespace=namespace,
-                )
-                try:
-                    os.remove(uploaded_file.name)
-                except Exception as e:
-                    pass
+            st.session_state.vectorstore.add_documents(
+                documents=splits,
+                namespace=namespace,
+            )
+            try:
+                os.remove(uploaded_file.name)
+            except Exception as e:
+                pass
 
-            st.session_state.prev_file = uploaded_file
+        st.session_state.prev_file = uploaded_file
 
     # LLM flag for augmented generation (the flag only applied to llm, not embedding model)
     USE_Anthropic = True
@@ -178,7 +169,7 @@ def main():
     # Show the chat history
     display_chat_history(msgs)
 
-    if uploaded_file is not None:
+    if st.session_state.vectorstore is not None:
 
         # Retrieve and RAG chain
         # Create a retriever using the vector database as the search source
