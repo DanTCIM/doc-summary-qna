@@ -110,7 +110,7 @@ def main():
         st.session_state.loaded_doc = None
 
     if uploaded_file is not None:
-        st.session_state.curr_file = uploaded_file
+        st.session_state.curr_file = uploaded_file.name
 
     if st.session_state.curr_file != st.session_state.prev_file:
         with st.spinner("Extracting text and converting to embeddings..."):
@@ -119,7 +119,7 @@ def main():
 
             splits = text_split_fn(st.session_state.loaded_doc)
 
-            namespace = re.sub(r"[^a-zA-Z0-9 \n\.]", "_", uploaded_file.name)
+            namespace = re.sub(r"[^a-zA-Z0-9 \n\.]", "_", st.session_state.curr_file)
 
             st.session_state.vectorstore = PineconeVectorStore(
                 index=pc.Index("streamlit"),
@@ -141,7 +141,7 @@ def main():
             except Exception as e:
                 pass
 
-        st.session_state.prev_file = uploaded_file
+        st.session_state.prev_file = st.session_state.curr_file
 
     # LLM flag for augmented generation (the flag only applied to llm, not embedding model)
     USE_Anthropic = True
@@ -257,17 +257,23 @@ def main():
                 use_container_width=True,
             )
 
-        # if st.button(
-        #     "Clear Data",
-        #     help="Clear vectorstore",
-        #     use_container_width=True,
-        # ):
-        #     # st.session_state.clear()
-        #     if "vectorstore" in st.session_state:
-        #         try:
-        #             index.delete(delete_all=True, namespace=namespace)
-        #         except Exception as e:
-        #             pass
+        if st.button(
+            "Clear Data",
+            help="Clears uploaded data, vectorstore, and conversation history.",
+            use_container_width=True,
+        ):
+            if "vectorstore" in st.session_state:
+                try:
+                    index = pc.Index("streamlit")
+                    namespace = namespace = re.sub(
+                        r"[^a-zA-Z0-9 \n\.]", "_", st.session_state.curr_file
+                    )
+                    index.delete(delete_all=True, namespace=namespace)
+                    st.session_state.clear()
+                    # st.session_state.vectorstore = None
+
+                except Exception as e:
+                    pass
 
         link = "https://github.com/DanTCIM/doc-summary-qna"
         st.caption(
