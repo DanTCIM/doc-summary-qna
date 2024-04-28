@@ -1,10 +1,11 @@
 ## sqlite3 related (for Streamlit)
-import pysqlite3
-import sys
+# import pysqlite3
+# import sys
 
-sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
+# sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 
 import os
+import re
 import streamlit as st
 
 from common.utils import (
@@ -26,26 +27,24 @@ from langchain_community.document_loaders import Docx2txtLoader
 from langchain_anthropic import ChatAnthropic
 from langchain_community.chat_models import ChatOpenAI
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
-from langchain_community.vectorstores import Chroma
+
+# from langchain_community.vectorstores import Chroma
+from langchain_pinecone import PineconeVectorStore
+from pinecone import Pinecone
 from langchain_community.document_loaders import PDFMinerLoader
 from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import pandas as pd
 
 
 def load_document(uploaded_file):
+    with open(uploaded_file.name, "wb") as f:
+        f.write(uploaded_file.getvalue())
     if uploaded_file.name.endswith(".pdf"):
-        with open("tempXXX.pdf", "wb") as f:
-            f.write(uploaded_file.getvalue())
-        return PDFMinerLoader("tempXXX.pdf", concatenate_pages=True)
+        return PDFMinerLoader(uploaded_file.name, concatenate_pages=True)
     elif uploaded_file.name.endswith(".docx"):
-        with open("tempXXX.docx", "wb") as f:
-            f.write(uploaded_file.getvalue())
-        return Docx2txtLoader("tempXXX.docx")
+        return Docx2txtLoader(uploaded_file.name)
     elif uploaded_file.name.endswith(".txt"):
-        with open("tempXXX.txt", "wb") as f:
-            f.write(uploaded_file.getvalue())
-        return TextLoader("tempXXX.txt")
+        return TextLoader(uploaded_file.name)
     else:
         raise ValueError(
             "Unsupported file format. Please upload a file in a supported format."
@@ -90,6 +89,9 @@ def main():
     os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
     os.environ["ANTHROPIC_API_KEY"] = st.secrets["ANTHROPIC_API_KEY"]
 
+    # Initialize Pinecone connection
+    pc = Pinecone(api_key=st.secrets["PINECONE_API_KEY"])
+
     # Start Streamlit session
     st.set_page_config(page_title="Doc Summary Q&A Tool", page_icon="📖")
     st.header("Actuarial Document Summarizer and Q&A Tool")
@@ -102,15 +104,13 @@ def main():
         help="Pictures or charts in the document are not recognized",
     )
 
-    # Initialize a session state variable to store the previous file
+    # Initialize session state variables
     if "prev_file" not in st.session_state:
         st.session_state.prev_file = None
 
-    # Initialize a session state variable to store the vectorstore
     if "vectorstore" not in st.session_state:
         st.session_state.vectorstore = None
 
-    # Initialize a session state variable to store the text
     if "loaded_doc" not in st.session_state:
         st.session_state.loaded_doc = None
 
@@ -122,11 +122,34 @@ def main():
 
                 splits = text_split_fn(st.session_state.loaded_doc)
 
+                namespace = re.sub(r"[^a-zA-Z0-9 \n\.]", "_", uploaded_file.name)
+
                 # Create a Chroma vector database from the document splits
-                st.session_state.vectorstore = Chroma.from_documents(
-                    documents=splits,
+                # st.session_state.vectorstore = Chroma.from_documents(
+                #     documents=splits,
+                #     embedding=embeddings_model,
+                # )
+
+                st.session_state.vectorstore = PineconeVectorStore(
+                    index=pc.Index("streamlit"),
                     embedding=embeddings_model,
+                    namespace=namespace,
                 )
+                index = pc.Index("streamlit")
+                try:
+                    index.delete(delete_all=True, namespace=namespace)
+                except Exception as e:
+                    pass
+
+                st.session_state.vectorstore.add_documents(
+                    documents=splits,
+                    namespace=namespace,
+                )
+                try:
+                    os.remove(uploaded_file.name)
+                except Exception as e:
+                    pass
+
             st.session_state.prev_file = uploaded_file
 
     # LLM flag for augmented generation (the flag only applied to llm, not embedding model)
@@ -242,6 +265,18 @@ def main():
                 mime="text/csv",
                 use_container_width=True,
             )
+
+        # if st.button(
+        #     "Clear Data",
+        #     help="Clear vectorstore",
+        #     use_container_width=True,
+        # ):
+        #     # st.session_state.clear()
+        #     if "vectorstore" in st.session_state:
+        #         try:
+        #             index.delete(delete_all=True, namespace=namespace)
+        #         except Exception as e:
+        #             pass
 
         link = "https://github.com/DanTCIM/doc-summary-qna"
         st.caption(
