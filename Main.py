@@ -5,6 +5,7 @@ import streamlit as st
 from common.utils import (
     StreamHandler,
     PrintRetrievalHandler,
+    DocProcessStreamHandler,
     embeddings_model,
 )
 
@@ -207,17 +208,23 @@ def main():
         # Define Q&A chain
         qa_chain = setup_qa_chain(llm, retriever, memory)
 
-        def summarizer():
-            with st.spinner("Summarizing the document..."):
-                summary_data = stuff_chain.invoke(st.session_state.loaded_doc)[
-                    "output_text"
-                ]
-                msgs.add_ai_message(summary_data)
+        def summarizer(document):
+            # with st.spinner("Summarizing the document..."):
+            #     summary_data = stuff_chain.invoke(st.session_state.loaded_doc)[
+            #         "output_text"
+            #     ]
+            #     msgs.add_ai_message(summary_data)
+            container = st.empty()
+            doc_process_stream_handler = DocProcessStreamHandler(
+                container=container, msgs=msgs
+            )
+            response = stuff_chain.run(document, callbacks=[doc_process_stream_handler])
+            doc_process_stream_handler.on_llm_end(response)
 
         st.sidebar.button(
             label="Summarize the doc (takes a minute)",
             use_container_width=True,
-            on_click=summarizer,
+            on_click=lambda: summarizer(st.session_state.loaded_doc),
             help="Summarizing the full document. Can take a while to complete.",
         )
 

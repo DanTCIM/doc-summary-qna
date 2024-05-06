@@ -66,3 +66,23 @@ class PrintRetrievalHandler(BaseCallbackHandler):
         return np.dot(embedding1, embedding2) / (
             np.linalg.norm(embedding1) * np.linalg.norm(embedding2)
         )
+
+
+class DocProcessStreamHandler(BaseCallbackHandler):
+    def __init__(
+        self,
+        container: st.delta_generator.DeltaGenerator,
+        msgs,
+        initial_text: str = "",
+    ):
+        self.container = container
+        self.msgs = msgs
+        self.text = initial_text
+
+    def on_llm_new_token(self, token: str, **kwargs) -> None:
+        self.text += token
+        self.container.markdown(self.text)
+
+    def on_llm_end(self, response, **kwargs):
+        self.msgs.add_ai_message(response)
+        self.container.empty()
