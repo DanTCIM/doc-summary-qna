@@ -148,10 +148,9 @@ def main():
     USE_Anthropic = True
 
     if USE_Anthropic:
-        model_name = "claude-3-sonnet-20240229"
+        model_name = "claude-3-5-sonnet-20240620"
     else:
-        # model_name = "gpt-3.5-turbo"
-        model_name = "gpt-4-turbo"  # gpt-4 seems to be slow
+        model_name = "gpt-4o"
 
     # Sidebar
     sidebar_content(model_name)

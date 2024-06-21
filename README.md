@@ -1,6 +1,6 @@
 # Actuarial Document Summarizer and Q&A Tool
 ## 1. Description
-This project aims to create a process to help actuaries review actuarial documents. Once a file (PDF, DOCX, TXT) is uploaded, a user can create a summary or ask questions about the document. The process utilizes the power of a large language model (LLM). The tool is powered by Anthropic's Claude 3 Sonnet.
+This project aims to create a process to help actuaries review actuarial documents. Once a file (PDF, DOCX, TXT) is uploaded, a user can create a summary or ask questions about the document. The process utilizes the power of a large language model (LLM). The tool is powered by Anthropic's Claude 3.5 Sonnet.
 
 It is crucial to know that an LLM's response may be inaccurate. Actuaries are strongly encouraged to review the source document after using the tool.
 
@@ -23,7 +23,7 @@ The tool uses two processes.
 
 ![Summary process](./pages/summary_process.png)
 - The summary process is slow, as the full contexts are input into the LLM.
-- The process leverages a large context window of the LLM (e.g., 200k tokens for Claude 3). Any information beyond this window is discarded.
+- The process leverages a large context window of the LLM (e.g., 200k tokens for Claude 3.5). Any information beyond this window is discarded.
 - The LLM API cost is more expensive, as the full contexts are used as input to the LLM.
 - The summary instruction provides a format for summarizing the full document.
 
